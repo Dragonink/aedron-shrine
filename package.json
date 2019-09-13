@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "main": "app/app.js",
   "devDependencies": {
-    "electron": "^3.0.5"
+    "electron": "3.0.5"
   },
   "scripts": {
     "start": "electron ./app/"

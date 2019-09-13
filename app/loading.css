@@ -1,0 +1,43 @@
+@font-face {
+  font-family: Almendra;
+  src: url(resources/Almendra.otf);
+}
+@font-face {
+  font-family: Almendra;
+  font-weight: bold;
+  src: url(resources/Almendra-Bold.otf);
+}
+html, body {
+  width: 100%;
+  height: 100%;
+  cursor: default;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #fff;
+  text-align: center;
+  background-color: #212121;
+  overflow: hidden;
+  margin: 0;
+}
+@keyframes logo {
+  from {transform: rotate(0deg);}
+  to {transform: rotate(360deg);}
+}
+#ico {
+  margin-top: 50px;
+  margin-bottom: 70px;
+  animation-name: logo;
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+}
+#title {
+  font-family: Almendra, sans-serif;
+  margin: 10px 0 0 0;
+  color: #ffd700;
+}
+#subtitle {
+  margin: 0 0 15px 0;
+}
+#splash {
+  color: #777;
+  margin-top: 25px;
+}
