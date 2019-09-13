@@ -32,8 +32,7 @@ fs.readdir(path.join(dir, 'musics'), (error, musicList) => {
   if (!error && musicList.length > 0) {
     App.muSrc = path.join(dir, 'musics', musicList[Math.floor(Math.random() * (musicList.length))]);
     document.getElementById("music").addEventListener('ended', (event) => {
-      App.muSrc = path.join(dir, 'musics', musicList[Math.floor(Math.random() * (musicList.length))]);
-      document.getElementById("music").play()
+      App.muSrc = path.join(dir, 'musics', musicList[Math.floor(Math.random() * (musicList.length))])
     })
   }
 });
@@ -44,7 +43,7 @@ const controls = (event) => {
   switch (event.key) {
     case "PageUp":
       if (Status.subView !== null) break;
-      display({ category: Library.search(Status.selectedCategory, true, true) });
+      display({ category: Library.search((Status.selectedCategory !== 'secret') ? Status.selectedCategory : -1, true, true) });
       break;
     case "PageDown":
       if (Status.subView !== null) break;
@@ -119,7 +118,7 @@ if (Library.hasSecret) {
 /* Complete initialization */
 if (Library.size > 0) {
   document.getElementById('emptyAlert').style.display = 'none';
-  display({ category: Library.search(-1) })
+  display({ category: Library.search(-1, false, true) })
 } else document.getElementById('app').style.display = 'none';
 
 /*

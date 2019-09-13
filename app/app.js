@@ -60,7 +60,6 @@ app.once('ready', () => {
           main.show();
           main.focus();
           console.log("[main] BrowserWindow : Showed <main>.");
-          main.webContents.executeJavaScript("document.getElementById('music').play()", true);
           loading.close();
           console.log("[main] BrowserWindow : Closed <loading>.")
         }, 1000)

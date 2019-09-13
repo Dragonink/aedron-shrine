@@ -24,7 +24,7 @@
   </div>
   <div id="app">
     <img id="background" v-bind:src="bgSrc" />
-    <audio id="music" v-bind:src="muSrc"></audio>
+    <audio id="music" v-bind:src="muSrc" autoplay></audio>
     <div id="list" v-if="superGame === null">
       <h5 class="category">{{ (categories[0] !== null) ? categories[0].name : '' }}</h5>
       <h3 class="category">{{ (categories[1] !== null) ? categories[1].name : '' }}</h3>
@@ -45,7 +45,7 @@
       </div>
       <ul id="subList" class="game">
         <li class="game" v-for="(game, index) in games" v-bind:key="index">
-          <h3>{{ game.name }}</h3>
+          <h3 v-html="highlight(game.name)"></h3>
         </li>
       </ul>
     </div>
@@ -66,6 +66,11 @@
         },
         superBanner: function () {
           return (typeof this.superGame.banner !== null) ? path.join(dir, 'banners', this.categories[2].name, this.superGame.banner) : ''
+        }
+      },
+      methods: {
+        highlight: function (name) {
+          return name.replace(this.superGame.name, "<span style='color:var(--categoryColor, #888);'>" + this.superGame.name + "</span>")
         }
       }
     })

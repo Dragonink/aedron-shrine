@@ -80,14 +80,18 @@ class LibraryClass extends Map {
     return super.size - this.hasSecret
   };
   search(index, inverseOrder = false, loop = false) {
-    if (index === null) return null
-    else if (index === 'secret') index = this.size;
-    var keys = [];
-    for (var key of this.keys()) if (key !== 'secret') keys.push(key);
-    var target = (!inverseOrder) ? index + 1 : index - 1;
-    if (loop) target = (!inverseOrder) ? target % keys.length : (target + keys.length) % keys.length
-    else if (!loop && (0 > target || target >= keys.length)) target = null;
-    return (target !== null) ? keys[target] : null
+    const keys = Array.from(this.keys()).filter(el => typeof el === "number"),
+      i = keys.findIndex(el => el === index);
+    if (i === -1) {
+      if (inverseOrder) return (loop) ? keys[keys.length - 1] : null
+      else return (loop) ? keys[0] : null
+    } else if (loop) {
+      if (inverseOrder) return keys[(i - 1 + keys.length) % keys.length]
+      else return keys[(i + 1) % keys.length]
+    } else {
+      if (inverseOrder) return (i - 1 < 0) ? null : keys[i - 1]
+      else return (i + 1 >= keys.length) ? null : keys[i + 1]
+    }
   };
   * buildCategories(dir) {
     const categoriesList = fs.readdirSync(path.join(dir, 'games'));
