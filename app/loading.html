@@ -5,8 +5,8 @@
   <meta charset="utf-8" />
   <link rel="stylesheet" href="loading.css" />
   <script>
-    const { ipcRenderer } = require('electron');
-    document.write("<script src='lib/vue" + ((require('electron').remote.app.isPackaged) ? '.min' : '') + ".js'>")
+    const { remote, ipcRenderer } = require('electron');
+    document.write("<script src='lib/vue" + ((remote.app.isPackaged) ? '.min' : '') + ".js'>")
   </script>
   </script>
 </head>

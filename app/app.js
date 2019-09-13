@@ -2,7 +2,7 @@ const path = require('path'),
   fs = require('fs'),
   { app, BrowserWindow, ipcMain } = require('electron');
 
-console.log("{" + app.getName() + " v" + app.getVersion() + "} (Node v" + process.versions.node + " | Electron v" + process.versions.electron + ")");
+console.log("{" + app.getName() + " v" + app.getVersion() + "} (Electron v" + process.versions.electron + " | Node v" + process.versions.node + ")");
 console.log("");
 
 app.once('ready', () => {
@@ -18,7 +18,10 @@ app.once('ready', () => {
     resizable: false,
     minimizable: false,
     maximizable: false,
-    show: false
+    show: false,
+    webPreferences: {
+      nodeIntegration: true
+    }
   });
   console.log("[main] BrowserWindow : Created <main>.");
   const loading = new BrowserWindow({
@@ -34,7 +37,10 @@ app.once('ready', () => {
     resizable: false,
     minimizable: false,
     maximizable: false,
-    show: false
+    show: false,
+    webPreferences: {
+      nodeIntegration: true
+    }
   });
   console.log("[main] BrowserWindow : Created <loading>.");
 

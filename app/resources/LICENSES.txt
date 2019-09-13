@@ -3,10 +3,14 @@
 ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 Copyright (c) 2018-2019, Dragonink (https://dragolemjblond.itch.io).
 
+'Aedron Shrine' is built using the following projects :
+  ■ 'Electron' v5.0.1
+    ■ 'Node.js' v12.0.0
+
 'Aedron Shrine' uses the following third-party contents :
   ■ 'Almendra' font (License at line 12)
-  ■ 'Vue.js' library (License at line 110)
-  ■ 'Toastify' library (License at line 135)
+  ■ 'Vue.js' library (License at line 110) v2.6.10
+  ■ 'Toastify' library (License at line 135) v1.3.1
 
 
 =================================== ALMENDRA ===================================

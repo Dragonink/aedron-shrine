@@ -13,6 +13,10 @@ body {
   overflow: hidden;
   margin: 0;
 }
+:root {
+  --gameWidth: calc((100vw - 2 * 20px - 2 * 10px) / 3);
+  --gameHeight: calc(215 * var(--gameWidth, 460px) / 460);
+}
 /*
 * APP
 */
@@ -60,8 +64,6 @@ body {
   width: calc(100vw - 2 * 20px);
   height: calc(100vh - 3 * 20px - 64px);
   grid-gap: 10px;
-  --gameWidth: calc((100vw - 2 * 20px - 2 * 10px) / 3);
-  --gameHeight: calc(215 * var(--gameWidth, 460px) / 460);
   grid-template-columns: repeat(3, var(--gameWidth, 460px));
   grid-template-rows: repeat(auto-fill, var(--gameHeight, 215px));
   grid-auto-columns: var(--gameWidth, 460px);
@@ -69,12 +71,57 @@ body {
   grid-auto-flow: row;
   margin: 20px 20px 0 20px;
 }
-.game {
+/* GAMES SUB */
+#sub {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: calc(100vw - 2 * 20px);
+  height: calc(100vh - 2 * 20px);
+  margin: 20px 20px 0 20px;
+}
+div.super {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: var(--gameWidth, 460px);
+  height: var(--gameHeight, 215px);
+  background-color: #212121;
+  outline-offset: -1px;
+  outline: 3px solid var(--categoryColor, #888);
+  margin: 20px;
+}
+h1.super {
+  position: absolute;
+  top: var(--gameHeight, 215px);
+  width: var(--gameWidth, 460px);
+  color: var(--categoryColor, #888);
+}
+/* GAMES */
+ul.game {
+  position: absolute;
+  top: 0px;
+  left: calc(3 * 20px + var(--gameWidth, 460px));
+  width: calc(100vw - 6 * 20px - var(--gameWidth, 460px));
+  height: calc(100vh - 2 * 20px);
+  list-style-type: none;
+  padding: 0;
+  margin: 23px 20px 0 20px;
+}
+li.game {
+  width: 100%;
+  height: 60px;
+  padding: 1px 0;
+  margin: 20px 0;
+}
+#grid > div.game,
+img.game,
+img.super {
   width: 100%;
   height: 100%;
   background-color: #212121;
 }
-div.game.selected {
+.game.selected {
   outline-offset: 2px;
   outline: 3px solid var(--categoryColor, #888);
 }
@@ -83,10 +130,14 @@ div.game.selected {
   50% {outline-offset: -5px;}
   85% {outline-offset: 5px;}
 }
-div.game.selected.launching {
+.game.selected.launching {
   animation-name: launch;
   animation-duration: .25s;
 }
+
+/*
+* TOASTIFY
+*/
 .toastify:not(.version) {
   z-index: 2019;
   background: #212121 !important;

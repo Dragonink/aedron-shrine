@@ -1,12 +1,12 @@
 {
   "name": "aedron-shrine",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A simple yet customizable game launcher.",
   "author": "Dragonink (https://github.com/Dragonink)",
   "private": true,
   "license": "UNLICENSED",
   "main": "app/app.js",
   "devDependencies": {
-    "electron": "4.1.4"
+    "electron": "5.0.1"
   }
 }
