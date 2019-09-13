@@ -4,13 +4,41 @@
 <head>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="loading.css" />
+  <script>
+    const { ipcRenderer } = require('electron');
+    document.write("<script src='lib/vue" + ((require('electron').remote.app.isPackaged) ? '.min' : '') + ".js'>")
+  </script>
+  </script>
 </head>
 
 <body>
   <img id="ico" src="resources/AedronShrine.png" height="150" width="150" />
   <h1 id="title">Aedron Shrine</h1>
-  <h4 id="subtitle">â”€ Game Launcher â”€</h4>
-  <h6 id="splash"><span style="color: #ee7c00;">Loading</span> your library...</h6>
+  <h4 id="subtitle">─ Game Launcher ─</h4>
+  <h6 id="splash"><span v-bind:style="{color: headColor}">{{ head }}</span> {{ message }}</h6>
+  <script>
+    var Splash = new Vue({
+      el: '#splash',
+      data: {
+        headColor: '#ee7c00',
+        head: 'Loading',
+        message: 'your library...'
+      }
+    });
+    ipcRenderer.on('splash', (event, code) => {
+      switch (code) {
+        case 1:
+          Splash.headColor = '#06ac06';
+          Splash.head = 'Completed';
+          Splash.message = '';
+          break;
+        default:
+          Splash.headColor = '#ee7c00';
+          Splash.head = 'Loading';
+          Splash.message = 'your library...';
+      }
+    })
+  </script>
 </body>
 
 </html>

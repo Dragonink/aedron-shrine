@@ -4,20 +4,54 @@
 <head>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="main.css" />
+  <link rel="stylesheet" href="lib/toastify.css" />
+  <script>
+    const path = require('path'),
+      fs = require('fs'),
+      { remote, ipcRenderer, shell } = require('electron');
+    const dir = path.join(remote.app.getPath('documents'), 'AedronShrine');
+    document.write("<script src='lib/vue" + ((remote.app.isPackaged) ? '.min' : '') + ".js'>")
+  </script>
+  </script>
+  <script src="lib/toastify.js"></script>
+  <script src="Library.js"></script>
   <script src="main.js" defer></script>
 </head>
 
 <body>
-  <img id="logo" src="resources/AedronShrine.png" width="64" height="64" />
-  <img id="bg" />
-  <audio id="music"></audio>
-  <div id="list">
-    <h4 class="list categories outer"></h4>
-    <h2 class="list categories inner"></h2>
-    <h1 class="list categories selected"></h1>
-    <h2 class="list categories inner"></h2>
-    <h4 class="list categories outer"></h4>
+  <h1 id="emptyAlert"><b>Your library is empty !</b><br />Press <kbd>F5</kbd> to open the configuration folder.</h1>
+  <div id="app">
+    <img id="background" v-bind:src="bgSrc" />
+    <audio id="music" v-bind:src="muSrc"></audio>
+    <div id="list">
+      <h5 class="category">{{ (categories[0] !== null) ? categories[0].name : '' }}</h5>
+      <h3 class="category">{{ (categories[1] !== null) ? categories[1].name : '' }}</h3>
+      <h1 class="category selected">{{ (categories[2] !== null) ? categories[2].name : '' }}</h1>
+      <h3 class="category">{{ (categories[3] !== null) ? categories[3].name : '' }}</h3>
+      <h5 class="category">{{ (categories[4] !== null) ? categories[4].name : '' }}</h5>
+    </div>
+    <div id="grid">
+      <div class="game" v-for="(game, index) in games" v-bind:key="index">
+        <img class="game" v-if="game.banner !== null" v-bind:src="gamesBanners[index]" />
+      </div>
+    </div>
   </div>
+  <script>
+    var App = new Vue({
+      el: '#app',
+      data: {
+        bgSrc: null,
+        muSrc: null,
+        categories: new Array(5).fill(null),
+        games: []
+      },
+      computed: {
+        gamesBanners: function () {
+          return this.games.map(game => (game.banner !== null) ? path.join(dir, 'banners', this.categories[2].name, game.banner) : '')
+        }
+      }
+    })
+  </script>
 </body>
 
 </html>

@@ -1,13 +1,12 @@
-const path = require('path');
-const fs = require('fs');
-const { app, BrowserWindow, ipcMain, globalShortcut } = require('electron');
-const Library = require('./Library.js');
+const path = require('path'),
+  fs = require('fs'),
+  { app, BrowserWindow, ipcMain } = require('electron');
 
-console.log("{" + app.getName() + " v" + app.getVersion() + "}");
+console.log("{" + app.getName() + " v" + app.getVersion() + "} (Node v" + process.versions.node + " | Electron v" + process.versions.electron + ")");
 console.log("");
 
 app.once('ready', () => {
-  console.log("[main] app : Ready. " + "(Electron v" + process.versions.electron + " | Node v" + process.versions.node + " | Chromium v" + process.versions.chrome + ")");
+  console.log("[main] app : Ready.");
 
   const main = new BrowserWindow({
     title: "Aedron Shrine",
@@ -23,7 +22,7 @@ app.once('ready', () => {
   });
   console.log("[main] BrowserWindow : Created <main>.");
   const loading = new BrowserWindow({
-    title: "Aedron Shrine",
+    title: "Loading Aedron Shrine...",
     icon: path.join("resources", "AedronShrine.ico"),
     frame: false,
     height: 400,
@@ -46,47 +45,23 @@ app.once('ready', () => {
     loading.show();
     loading.focus();
     console.log("[main] BrowserWindow : Showed <loading>.");
-    var progress = .1;
-    loading.setProgressBar(progress);
-    new Library(path.join(app.getPath('documents'), 'AedronShrine'), path, fs)
-      .initDir()
-      .then(library => {
-        progress = .2;
-        loading.setProgressBar(progress);
-        return library.loadCategories()
-      })
-      .then(library => {
-        progress = .5;
-        loading.setProgressBar(progress);
-        return library.loadGames()
-      })
-      .then(library => {
-        library = Library.clean(library);
-        progress = 1.;
-        loading.setProgressBar(progress);
-        loading.webContents.executeJavaScript("document.getElementById('splash').innerHTML = \"<span style='color: #06ac06'>Completed</span>\"");
-        main.webContents.loadFile("main.html");
-        main.once("ready-to-show", () => {
-          main.webContents.send("ready", library);
-          setTimeout(() => {
-            main.show();
-            main.focus();
-            console.log("[main] BrowserWindow : Showed <main>.");
-            main.webContents.executeJavaScript("document.getElementById('music').load();document.getElementById('music').play()", true);
-            loading.close();
-            console.log("[main] BrowserWindow : Closed <loading>.")
-          }, 1000)
-        })
-      })
-      .catch(error => {
-        loading.flashFrame(true);
-        loading.setProgressBar(progress, { mode: 'error' });
-        console.error("[main] Library : " + error);
-        globalShortcut.register('Esc', app.quit)
-        console.log("[main] globalShortcut : Registered [Esc].")
-        loading.webContents.executeJavaScript("document.getElementById('splash').innerHTML = \"<span style='color: #fa0606;'>ERROR</span> Press ESC to quit.\"")
-      })
-  });
-
-  app.once("window-all-closed", (event) => app.quit())
-})
+    main.webContents.loadFile("main.html");
+    ipcMain.on('loading', (event, progress) => {
+      loading.setProgressBar(progress);
+      if (progress >= 1.) {
+        loading.webContents.send('splash', 1);
+        main.once("ready-to-show", () => setTimeout(() => {
+          main.show();
+          main.focus();
+          console.log("[main] BrowserWindow : Showed <main>.");
+          main.webContents.executeJavaScript("document.getElementById('music').play()", true);
+          loading.close();
+          console.log("[main] BrowserWindow : Closed <loading>.")
+        }, 1000)
+        );
+        ipcMain.removeAllListeners('loading')
+      }
+    })
+  })
+});
+app.once("window-all-closed", (event) => app.quit())

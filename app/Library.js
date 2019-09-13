@@ -1,87 +1,95 @@
-module.exports = class Library {
-  constructor(dir, path, fs) {
-    this.Dir = dir;
-    this.path = path;
-    this.fs = fs;
-
-    this.categories = [];
-    this.edgyCrap = false;
-    this.categoriesCount = 0;
-    this.games = {};
-    this.gamesCounts = {}
+class LibraryClass extends Map {
+  constructor() {
+    super()
   };
-
-  initDir() {
-    let self = this;
-    return new Promise(function (resolve, reject) {
-      try {
-        if (!self.fs.existsSync(self.Dir)) self.fs.mkdirSync(self.Dir);
-        if (!self.fs.existsSync(self.path.join(self.Dir, 'games'))) self.fs.mkdirSync(self.path.join(self.Dir, 'games'));
-        if (!self.fs.existsSync(self.path.join(self.Dir, 'banners'))) self.fs.mkdirSync(self.path.join(self.Dir, 'banners'));
-        if (!self.fs.existsSync(self.path.join(self.Dir, 'backgrounds'))) self.fs.mkdirSync(self.path.join(self.Dir, 'backgrounds'));
-        if (!self.fs.existsSync(self.path.join(self.Dir, 'musics'))) self.fs.mkdirSync(self.path.join(self.Dir, 'musics'))
-      } catch (error) {
-        reject("Failed to initialize configuration directory : " + error)
-      };
-      resolve(self)
-    })
-  };
-  loadCategories() {
-    let self = this;
-    return new Promise(function (resolve, reject) {
-      try {
-        var categoriesList = self.fs.readdirSync(self.path.join(self.Dir, 'games'))
-      } catch (error) {
-        reject("Failed to fetch categories : " + error)
-      };
-      function Category(name, color, pwd = null) {
-        this.name = name;
-        this.color = color;
-        this.pwd = pwd
-      };
-      for (var category of categoriesList) {
-        if (category.split('--')[0] !== 'secret') {
-          self.categories.push(new Category(category.split('--')[1], category.split('--')[2]));
-        } else {
-          self.categories.push(new Category('Secret', 'fa0606', category.split('--')[1]));
-          self.edgyCrap = true
+  static * build(dir) {
+    var library = new LibraryClass();
+    /* Generators */
+    function Game(name, banner = null) {
+      this.name = name;
+      this.banner = banner
+    };
+    function* buildGames(gamesList, bannersList) {
+      for (var gameFileName of gamesList) {
+        // Check game compliancy
+        if (/^(?:\d{2})--(?:.{1,})\.(?:lnk|url)$/.test(gameFileName)) {
+          let matches = /^(\d{2})--(.{1,})\.(?:lnk|url)$/.exec(gameFileName),
+            bannerFileName = bannersList.find(el => new RegExp('^' + matches[2] + '.(?:png|jpg|jpeg|gif)$').test(el));
+          yield [Number(matches[1]), new Game(matches[2], bannerFileName)]
         }
-      };
-      self.categoriesCount = self.categories.length - self.edgyCrap;
-      resolve(self)
-    })
-  };
-  loadGames() {
-    let self = this;
-    return new Promise(function (resolve, reject) {
-      for (var category in self.categories) {
-        var categoryFilename = (self.categories[category].pwd === null) ?
-          self.fs.readdirSync(self.path.join(self.Dir, 'games'))
-            .find(el => new RegExp('^(\\d{2})--' + self.categories[category].name + '--(\\w{6})$').test(el)) :
-          self.fs.readdirSync(self.path.join(self.Dir, 'games'))
-            .find(el => new RegExp('^secret--(\\w{1,})$').test(el));
-        try {
-          self.games[self.categories[category].name] = self.fs.readdirSync(self.path.join(self.Dir, 'games', categoryFilename))
-        } catch (error) {
-          reject("Failed to fetch games from " + categoryFilename + " : " + error)
+      }
+    };
+    function Category(name, color, games, pwd = null) {
+      this.name = name;
+      this.color = color;
+      this.games = games;
+      this.pwd = pwd
+    };
+    function* buildCategories(categoriesList) {
+      for (var categoryDirName of categoriesList) {
+        // Check category compliancy
+        let matches, categoryName;
+        if (/^(?:\d{2})--(?:.{1,})--(?:\w{6})$/.test(categoryDirName)) {
+          matches = /^(\d{2})--(.{1,})--(\w{6})$/.exec(categoryDirName);
+          categoryName = matches[2]
+        } else if (/^secret--(?:[a-z]{1,})$/.test(categoryDirName)) {
+          matches = /^secret--([a-z]{1,})$/.exec(categoryDirName);
+          categoryName = 'Secret'
+        } else continue;
+        // Add games to category
+        var games = new Map();
+        let gamesList = fs.readdirSync(path.join(dir, 'games', categoryDirName)),
+          bannersList = (fs.existsSync(path.join(dir, 'banners', categoryName))) ?
+            fs.readdirSync(path.join(dir, 'banners', categoryName)) : [];
+        let gameBuilder = buildGames(gamesList, bannersList);
+        var gameBuilderYield = gameBuilder.next();
+        while (!gameBuilderYield.done) {
+          games.set(...gameBuilderYield.value);
+          gameBuilderYield = gameBuilder.next()
         };
-        try {
-          self.games[self.categories[category].name] = self.games[self.categories[category].name].map(val => val.split('--')[1].split('.')[0])
-        } catch (error) {
-          self.games[self.categories[category].name] = new Array(self.fs.readdirSync(self.path.join(self.Dir, 'games', categoryFilename)).length)
-        }
-      };
-      self.gamesCounts.total = 0;
-      for (var category in self.games) {
-        self.gamesCounts.total += self.games[category].length;
-        self.gamesCounts[category] = self.games[category].length;
-      };
-      resolve(self)
-    })
-  };
-  static clean(library) {
-    delete library.path;
-    delete library.fs;
+        yield (categoryName !== 'Secret') ?
+          [Number(matches[1]), new Category(...matches.slice(2), games)] :
+          ['secret', new Category('Secret', 'fa0606', games, matches[1])]
+      }
+    };
+    /* Config dir initialization */
+    LibraryClass.initDir(dir);
+    /* Add categories */
+    let categoriesList = fs.readdirSync(path.join(dir, 'games'));
+    if (categoriesList.length > 0) {
+      var i = 0;
+      yield (i++) / categoriesList.length;
+      let categoryBuilder = buildCategories(categoriesList);
+      var categoryBuilderYield = categoryBuilder.next();
+      while (!categoryBuilderYield.done) {
+        library.set(...categoryBuilderYield.value);
+        categoryBuilderYield = categoryBuilder.next();
+        yield (i++) / categoriesList.length;
+      }
+    } else yield 1.1;
     return library
+  };
+  static initDir(dir) {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+    if (!fs.existsSync(path.join(dir, 'games'))) fs.mkdirSync(path.join(dir, 'games'));
+    if (!fs.existsSync(path.join(dir, 'banners'))) fs.mkdirSync(path.join(dir, 'banners'));
+    if (!fs.existsSync(path.join(dir, 'backgrounds'))) fs.mkdirSync(path.join(dir, 'backgrounds'));
+    if (!fs.existsSync(path.join(dir, 'musics'))) fs.mkdirSync(path.join(dir, 'musics'))
+  };
+  get size() {
+    return super.size - this.hasSecret
+  };
+  get hasSecret() {
+    return this.has('secret')
+  };
+  search(index, inverseOrder = false, loop = false) {
+    if (index === null) return null
+    else if (index === 'secret') index = this.size;
+    var keys = [];
+    for (var key of this.keys()) if (key !== 'secret') keys.push(key);
+    var target = (!inverseOrder) ? index + 1 : index - 1;
+    if (loop) target = (!inverseOrder) ? target % keys.length : (target + keys.length) % keys.length
+    else if (!loop && (0 > target || target >= keys.length)) target = null;
+    return (target !== null) ? keys[target] : null
   }
 }
