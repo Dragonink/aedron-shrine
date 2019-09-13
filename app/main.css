@@ -14,8 +14,10 @@ body {
   margin: 0;
 }
 :root {
-  --gameWidth: calc((100vw - 2 * 20px - 2 * 10px) / 3);
+  --gameWidth: calc((100vw - 2 * 20px - (var(--nbColumns, 3) - 1) * 10px) / var(--nbColumns, 3));
   --gameHeight: calc(215 * var(--gameWidth, 460px) / 460);
+  --defaultGameWidth: calc((100vw - 2 * 20px - 2 * 10px) / 3);
+  --defaultGameHeight: calc(215 * var(--defaultGameWidth, 460px) / 460);
 }
 /*
 * APP
@@ -27,7 +29,7 @@ body {
   margin: 45vh 0;
 }
 /* BACKGROUND */
-#background {
+.background {
   z-index: -1;
   width: 100vw;
   object-fit: cover;
@@ -64,7 +66,7 @@ body {
   width: calc(100vw - 2 * 20px);
   height: calc(100vh - 3 * 20px - 64px);
   grid-gap: 10px;
-  grid-template-columns: repeat(3, var(--gameWidth, 460px));
+  grid-template-columns: repeat(var(--nbColumns, 3), var(--gameWidth, 460px));
   grid-template-rows: repeat(auto-fill, var(--gameHeight, 215px));
   grid-auto-columns: var(--gameWidth, 460px);
   grid-auto-rows: var(--gameHeight, 215px);
@@ -84,8 +86,8 @@ div.super {
   position: absolute;
   top: 20px;
   left: 0px;
-  width: var(--gameWidth, 460px);
-  height: var(--gameHeight, 215px);
+  width: var(--defaultGameWidth, 460px);
+  height: var(--defaultGameHeight, 215px);
   background-color: #212121;
   outline-offset: -1px;
   outline: 3px solid var(--categoryColor, #888);
@@ -93,16 +95,16 @@ div.super {
 }
 h1.super {
   position: absolute;
-  top: var(--gameHeight, 215px);
-  width: var(--gameWidth, 460px);
+  top: var(--defaultGameHeight, 215px);
+  width: var(--defaultGameWidth, 460px);
   color: var(--categoryColor, #888);
 }
 /* GAMES */
 ul.game {
   position: absolute;
   top: 0px;
-  left: calc(2 * 20px + var(--gameWidth, 460px));
-  width: calc(100vw - 6 * 20px - var(--gameWidth, 460px));
+  left: calc(2 * 20px + var(--defaultGameWidth, 460px));
+  width: calc(100vw - 6 * 20px - var(--defaultGameWidth, 460px));
   height: calc(100vh - 2 * 20px);
   list-style-type: none;
   padding: 0;
@@ -120,6 +122,9 @@ img.super {
   width: 100%;
   height: 100%;
   background-color: #212121;
+}
+#grid > div.game.void {
+  background-color: transparent !important;
 }
 .game.selected {
   outline-offset: 2px;

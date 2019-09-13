@@ -1,13 +1,16 @@
 /*!
- * Toastify js 1.3.1
+ * Toastify js 1.6.1
  * https://github.com/apvarun/toastify-js
  * @license MIT licensed
  *
  * Copyright (C) 2018 Varun A P
  */
 (function(root, factory) {
-  /* LINES REMOVED */
-  root.Toastify = factory()
+  if (typeof module === "object" && module.exports) {
+    module.exports = factory();
+  } else {
+    root.Toastify = factory();
+  }
 })(this, function(global) {
   // Object initialization
   var Toastify = function(options) {
@@ -15,7 +18,7 @@
       return new Toastify.lib.init(options);
     },
     // Library version
-    version = "1.3.1";
+    version = "1.6.1";
 
   // Defining the prototype of the object
   Toastify.lib = Toastify.prototype = {
@@ -33,6 +36,8 @@
       // Creating the options object
       this.options = {};
 
+      this.toastElement = null;
+
       // Validating the options
       this.options.text = options.text || "Hi there!"; // Display message
       this.options.duration = options.duration || 3000; // Display duration
@@ -43,9 +48,11 @@
       this.options.close = options.close || false; // Show toast close icon
       this.options.gravity = options.gravity == "bottom" ? "toastify-bottom" : "toastify-top"; // toast position - top or bottom
       this.options.positionLeft = options.positionLeft || false; // toast position - left or right
+      this.options.position = options.position || ''; // toast position - left or right
       this.options.backgroundColor = options.backgroundColor; // toast background color
-      this.options.avatar = options.avatar || ""; // toast position - left or right
+      this.options.avatar = options.avatar || ""; // img element src - url or a path
       this.options.className = options.className || ""; // additional class names for the toast
+      this.options.stopOnFocus = options.stopOnFocus === undefined? true: options.stopOnFocus; // stop timeout on focus
 
       // Returning the current object for chaining functions
       return this;
@@ -62,11 +69,18 @@
       var divElement = document.createElement("div");
       divElement.className = "toastify on " + this.options.className;
 
-      // Positioning toast to left or right
-      if (this.options.positionLeft === true) {
-        divElement.className += " toastify-left";
+      // Positioning toast to left or right or center
+      if (!!this.options.position) {
+        divElement.className += " toastify-" + this.options.position;
       } else {
-        divElement.className += " toastify-right";
+        // To be depreciated in further versions
+        if (this.options.positionLeft === true) {
+          divElement.className += " toastify-left";
+          console.warn('Property `positionLeft` will be depreciated in further versions. Please use `position` instead.')
+        } else {
+          // Default position
+          divElement.className += " toastify-right";
+        }
       }
 
       // Assigning gravity of element
@@ -85,7 +99,7 @@
 
         avatarElement.className = "toastify-avatar";
 
-        if (this.options.positionLeft === true) {
+        if (this.options.position == "left" || this.options.positionLeft === true) {
           // Adding close icon on the left of content
           divElement.appendChild(avatarElement);
         } else {
@@ -112,12 +126,37 @@
           }.bind(this)
         );
 
+        // Clear timeout while toast is focused
+        if (this.options.stopOnFocus && this.options.duration > 0) {
+          const self = this;
+          // stop countdown
+          divElement.addEventListener(
+            "mouseover",
+            function(event) {
+              window.clearTimeout(divElement.timeOutValue);
+            }
+          )
+          // add back the timeout
+          divElement.addEventListener(
+            "mouseleave",
+            function() {
+              divElement.timeOutValue = window.setTimeout(
+                function() {
+                  // Remove the toast from DOM
+                  self.removeElement(divElement);
+                },
+                self.options.duration
+              )
+            }
+          )
+        }
+
         //Calculating screen width
         var width = window.innerWidth > 0 ? window.innerWidth : screen.width;
 
         // Adding the close icon to the toast element
         // Display on the right if screen width is less than or equal to 360px
-        if (this.options.positionLeft === true && width > 360) {
+        if ((this.options.position == "left" || this.options.positionLeft === true) && width > 360) {
           // Adding close icon on the left of content
           divElement.insertAdjacentElement("afterbegin", closeElement);
         } else {
@@ -148,7 +187,7 @@
     // Displaying the toast
     showToast: function() {
       // Creating the DOM object for the toast
-      var toastElement = this.buildToast();
+      this.toastElement = this.buildToast();
 
       // Getting the root element to with the toast needs to be added
       var rootElement;
@@ -164,21 +203,30 @@
       }
 
       // Adding the DOM element
-      rootElement.insertBefore(toastElement, rootElement.firstChild);
+      rootElement.insertBefore(this.toastElement, rootElement.firstChild);
 
       // Repositioning the toasts in case multiple toasts are present
       Toastify.reposition();
 
-      toastElement.timeOutValue = window.setTimeout(
-        function() {
-          // Remove the toast from DOM
-          this.removeElement(toastElement);
-        }.bind(this),
-        this.options.duration
-      ); // Binding `this` for function invocation
+      if (this.options.duration > 0) {
+        this.toastElement.timeOutValue = window.setTimeout(
+          function() {
+            // Remove the toast from DOM
+            this.removeElement(this.toastElement);
+          }.bind(this),
+          this.options.duration
+        ); // Binding `this` for function invocation
+      }
 
       // Supporting function chaining
       return this;
+    },
+
+    hideToast: function() {
+      if (this.toastElement.timeOutValue) {
+        clearTimeout(this.toastElement.timeOutValue);
+      }
+      this.removeElement(this.toastElement);
     },
 
     // Removing the element from the DOM

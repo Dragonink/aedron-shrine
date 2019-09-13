@@ -1,4 +1,6 @@
 {
   "main": "app.js",
-  "dependencies": {}
+  "dependencies": {
+    "electron-store": "^4.0.0"
+  }
 }

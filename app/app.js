@@ -5,6 +5,18 @@ const path = require('path'),
 console.log("{" + app.getName() + " v" + app.getVersion() + "} (Electron v" + process.versions.electron + " | Node v" + process.versions.node + ")");
 console.log("");
 
+let focusedWin = null;
+
+if (!app.requestSingleInstanceLock()) {
+  console.log("[main] app : Not single instance !");
+  app.quit()
+} else app.on('second-instance', (event, cmdL, wd) => {
+  if (focusedWin !== null) {
+    if (focusedWin.isMinimized()) focusedWin.restore();
+    focusedWin.focus()
+  }
+});
+
 app.once('ready', () => {
   console.log("[main] app : Ready.");
 
@@ -46,26 +58,28 @@ app.once('ready', () => {
 
   ipcMain.on("log", (event, logs) => console.log(logs));
 
-  loading.webContents.loadFile("loading.html");
+  loading.loadFile("loading.html");
   loading.once("ready-to-show", () => {
     loading.show();
     loading.focus();
-    console.log("[main] BrowserWindow : Showed <loading>.");
-    main.webContents.loadFile("main.html");
+    focusedWin = loading;
+    console.log("[main] BrowserWindow : Shown <loading>.");
+    main.loadFile("main.html");
     ipcMain.on('loading', (event, progress) => {
       loading.setProgressBar(progress);
       if (progress >= 1.) {
-        loading.webContents.send('splash', 1);
+        loading.webContents.send('splash', 2);
         main.once("ready-to-show", () => setTimeout(() => {
           main.show();
           main.focus();
-          console.log("[main] BrowserWindow : Showed <main>.");
+          focusedWin = main;
+          console.log("[main] BrowserWindow : Shown <main>.");
           loading.close();
           console.log("[main] BrowserWindow : Closed <loading>.")
         }, 1000)
         );
         ipcMain.removeAllListeners('loading')
-      }
+      } else if (progress >= .5) loading.webContents.send('splash', 1)
     })
   })
 });

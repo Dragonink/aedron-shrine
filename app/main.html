@@ -3,17 +3,24 @@
 
 <head>
   <meta charset="utf-8" />
+  <style id="styleVars">
+    :root {
+      --nbColumns: 3;
+      --categoryColor: #888;
+    }
+  </style>
   <link rel="stylesheet" href="main.css" />
   <link rel="stylesheet" href="lib/toastify.css" />
   <script>
     const path = require('path'),
       fs = require('fs'),
+      toastify = require('./lib/toastify.js'),
+      Store = require('electron-store'),
       { remote, ipcRenderer, shell } = require('electron');
-    const dir = path.join(remote.app.getPath('documents'), 'AedronShrine');
+    const DIR = path.join(remote.app.getPath('documents'), 'AedronShrine');
     document.write("<script src='lib/vue" + ((remote.app.isPackaged) ? '.min' : '') + ".js'>")
   </script>
   </script>
-  <script src="lib/toastify.js"></script>
   <script src="Library.js"></script>
   <script src="main.js" defer></script>
 </head>
@@ -23,54 +30,71 @@
     <h1><b>Your library is empty !</b><br />Press <kbd>F5</kbd> to open the configuration folder.</h1>
   </div>
   <div id="app">
-    <img id="background" v-bind:src="bgSrc" />
-    <audio id="music" v-bind:src="muSrc" autoplay></audio>
     <div id="list" v-if="superGame === null">
-      <h5 class="category">{{ (categories[0] !== null) ? categories[0].name : '' }}</h5>
-      <h3 class="category">{{ (categories[1] !== null) ? categories[1].name : '' }}</h3>
-      <h1 class="category selected">{{ (categories[2] !== null) ? categories[2].name : '' }}</h1>
-      <h3 class="category">{{ (categories[3] !== null) ? categories[3].name : '' }}</h3>
-      <h5 class="category">{{ (categories[4] !== null) ? categories[4].name : '' }}</h5>
+      <h5 class="category">{{ (categories[0] !== null) ? getCategory(categories[0]).name : '' }}</h5>
+      <h3 class="category">{{ (categories[1] !== null) ? getCategory(categories[1]).name : '' }}</h3>
+      <h1 class="category selected">{{ (categories[2] !== null) ? getCategory(categories[2]).name : '' }}</h1>
+      <h3 class="category">{{ (categories[3] !== null) ? getCategory(categories[3]).name : '' }}</h3>
+      <h5 class="category">{{ (categories[4] !== null) ? getCategory(categories[4]).name : '' }}</h5>
     </div>
     <div id="grid" v-if="superGame === null">
-      <div class="game" v-for="(game, index) in games" v-bind:key="index">
-        <img class="game" v-if="typeof game.banner !== 'undefined' && game.banner !== null"
-          v-bind:src="gamesBanners[index]" />
-      </div>
+      <div class="game" v-for="(game, index) in games" v-bind:key="index" v-bind:class="{void: game === null}"></div>
     </div>
     <div id="sub" v-if="superGame !== null">
       <div class="super">
-        <img class="super" v-if="superGame.banner !== null" v-bind:src="superBanner" />
-        <h1 class="super">{{ superGame.name }}</h1>
+        <h1 class="super">{{ superGameName }}</h1>
       </div>
       <ul id="subList" class="game">
-        <li class="game" v-for="(game, index) in games" v-bind:key="index">
-          <h3 v-html="highlight(game.name)"></h3>
+        <li class="game" v-for="(game, index) in subGames" v-bind:key="index">
+          <h3 v-html="highlight(game)"></h3>
         </li>
       </ul>
     </div>
   </div>
   <script>
-    var App = new Vue({
+    const App = new Vue({
       el: '#app',
       data: {
-        bgSrc: null,
-        muSrc: null,
         categories: new Array(5).fill(null),
         games: [],
-        superGame: null
+        superGame: null,
+        subGames: []
+      },
+      watch: {
+        games: function (newVal, oldVal) {
+          this.$nextTick(function () {
+            const grid = document.getElementById('grid').childNodes,
+              getGame = id => Library.get(id[0]).games.get(id[1]);
+            for (let game = 0; game < Math.min(oldVal.length, newVal.length); game++) if (oldVal[game] !== null && typeof getGame(oldVal[game]).banner !== 'undefined') getGame(oldVal[game]).banner.parentNode.removeChild(getGame(oldVal[game]).banner);
+            for (let game = 0; game < newVal.length; game++) if (newVal[game] !== null && typeof getGame(newVal[game]).banner !== 'undefined') grid[game].appendChild(getGame(newVal[game]).banner)
+          })
+        },
+        superGame: function (newVal, oldVal) {
+          if (newVal !== null) this.$nextTick(function () {
+            const sup = document.getElementById('sub').firstChild,
+              getGame = id => Library.get(id[0]).games.get(id[1]);
+            if (sup.childNodes.length > 1) sup.removeChild(sup.firstChild);
+            if (newVal !== null && typeof getGame(newVal).banner !== 'undefined') sup.insertBefore(getGame(newVal).banner, sup.firstChild)
+          })
+        }
       },
       computed: {
-        gamesBanners: function () {
-          return this.games.map(game => (typeof game.banner !== 'undefined' && game.banner !== null) ? path.join(dir, 'banners', this.categories[2].name, game.banner) : '')
-        },
-        superBanner: function () {
-          return (typeof this.superGame.banner !== null) ? path.join(dir, 'banners', this.categories[2].name, this.superGame.banner) : ''
+        superGameName: function () {
+          const getGame = id => Library.get(id[0]).games.get(id[1]);
+          return getGame(this.superGame).name
         }
       },
       methods: {
-        highlight: function (name) {
-          return name.replace(this.superGame.name, "<span style='color:var(--categoryColor, #888);'>" + this.superGame.name + "</span>")
+        getCategory: function (id) {
+          return Library.get(id)
+        },
+        highlight: function (game) {
+          const getGame = (id, sub = false) => {
+            let game = Library.get(id[0]).games.get(id[1]);
+            if (sub) return game.sub.get(id[2])
+            else return game
+          };
+          return getGame(game, true).name.replace(getGame(this.superGame).name, "<span style='color: var(--categoryColor, #888);'>" + getGame(this.superGame).name + "</span>")
         }
       }
     })
