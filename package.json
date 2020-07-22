@@ -8,7 +8,7 @@
   "main": "app/app.js",
   "devDependencies": {
     "asar": "^2.0.1",
-    "electron": "5.0.7",
+    "electron": "7.2.4",
     "electron-packager": "^14.0.1"
   }
 }
