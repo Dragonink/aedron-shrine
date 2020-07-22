@@ -4,10 +4,6 @@ _Aedron Shrine_ (or _Shrine_ for short) is a game library software from the _Aed
 
 It is built so you an access every game on your computer with a pretty frontend.
 
-## Documentation
-
-You can access the complete documentation for the current version [HERE](https://dragonink.gitbook.io/aedron-documentation/shrine/).
-
 ## Installation
 
 **Windows** builds are **free** to download from the [ITCH.IO PAGE](https://dragolemjblond.itch.io/aedron-shrine).
